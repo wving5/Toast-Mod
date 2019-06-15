@@ -10,6 +10,15 @@ Toast is an Objective-C category that adds toast notifications to the `UIView` o
 
 **Using Swift? A native swift port of this library is now available: [Toast-Swift](https://github.com/scalessec/Toast-Swift "Toast-Swift")**
 
+Fork Change Log
+---------
+##### v4.1
+
+1. remove class method wrapper in `CSToastManager`, use instance method macro sugar instead
+2. remove toast runtime setter/getter, create a new `CSToast` class instead ( also support toast using customed view
+3. **speed up** toast in queue if multiple toast is pending, enable `queueEnabled` by default
+
+
 Screenshots
 ---------
 ![Toast Screenshots](toast_screenshots.jpg)
