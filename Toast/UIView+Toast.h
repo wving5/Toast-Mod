@@ -25,11 +25,57 @@
 
 #import <UIKit/UIKit.h>
 
-extern const NSString * CSToastPositionTop;
-extern const NSString * CSToastPositionCenter;
-extern const NSString * CSToastPositionBottom;
+extern NSString * const CSToastPositionTop;
+extern NSString * const CSToastPositionCenter;
+extern NSString * const CSToastPositionBottom;
 
 @class CSToastStyle;
+
+
+typedef NS_ENUM(NSUInteger, CSToastStatus) {
+    CSToastStatusDefault,
+    CSToastStatusDoShowing,
+    CSToastStatusDisplaying,
+    CSToastStatusDoHiding,
+    CSToastStatusHidden,
+};
+
+@interface CSToast : UIView
+@property (nonatomic, assign, readonly) CSToastStatus status;
+@property (nonatomic, assign, readonly) NSTimeInterval duration;
+
+
+/**
+ Creates a new toast view with any combination of message, title, and image.
+ The look and feel is configured via the style. Unlike the `makeToast:` methods,
+ this method does not present the toast view automatically. One of the showToast:
+ methods must be used to present the resulting view.
+ 
+ @warning if message, title, and image are all nil, this method will return nil.
+ 
+ @param view The view which needs toast
+ @param message The message to be displayed
+ @param title The title
+ @param image The image
+ @param style The style. The shared style will be used when nil
+ @return The newly created toast view
+ */
+
++ (CSToast *)toastInView:(UIView *)view
+                 message:(NSString *)message
+                   title:(NSString *)title
+                   image:(UIImage *)image
+                   style:(CSToastStyle *)style;
+
+/**
+ Allow toast customed view
+ 
+ @warning customView should have a valid frame or layout may be messy
+ @return  a wrapper view
+ */
++ (CSToast *)toastWithCustomedView:(UIView *)customView;
+
+@end
 
 /**
  Toast is an Objective-C category that adds toast notifications to the UIView
@@ -104,25 +150,6 @@ extern const NSString * CSToastPositionBottom;
        completion:(void(^)(BOOL didTap))completion;
 
 /**
- Creates a new toast view with any combination of message, title, and image.
- The look and feel is configured via the style. Unlike the `makeToast:` methods,
- this method does not present the toast view automatically. One of the showToast:
- methods must be used to present the resulting view.
- 
- @warning if message, title, and image are all nil, this method will return nil.
- 
- @param message The message to be displayed
- @param title The title
- @param image The image
- @param style The style. The shared style will be used when nil
- @return The newly created toast view
- */
-- (UIView *)toastViewForMessage:(NSString *)message
-                          title:(NSString *)title
-                          image:(UIImage *)image
-                          style:(CSToastStyle *)style;
-
-/**
  Hides the active toast. If there are multiple toasts active in a view, this method
  hides the oldest toast (the first of the toasts to have been presented).
  
@@ -141,7 +168,7 @@ extern const NSString * CSToastPositionBottom;
  
  @warning this does not clear a toast view that is currently waiting in the queue.
  */
-- (void)hideToast:(UIView *)toast;
+- (void)hideToast:(CSToast *)toast;
 
 /**
  Hides all active toast views and clears the queue.
@@ -187,7 +214,7 @@ extern const NSString * CSToastPositionBottom;
  
  @param toast The view to be displayed as toast
  */
-- (void)showToast:(UIView *)toast;
+- (void)showToast:(CSToast *)toast;
 
 /**
  Displays any view as toast at a provided position and duration. The completion block 
@@ -351,11 +378,18 @@ extern const NSString * CSToastPositionBottom;
 
 @end
 
+
+#define CSToastManager CSToastManagerCls.sharedManager
 /**
  `CSToastManager` provides general configuration options for all toast
  notifications. Backed by a singleton instance.
  */
-@interface CSToastManager : NSObject
+@interface CSToastManagerCls : NSObject
+
++ (instancetype)sharedManager;
+
+@property (assign, nonatomic) NSTimeInterval maxDurationOnOverlapping;
+@property (assign, nonatomic) BOOL removePrevToastImmediatelyWhenOverlap;
 
 /**
  Sets the shared style on the singleton. The shared style is used whenever
@@ -365,30 +399,14 @@ extern const NSString * CSToastPositionBottom;
  
  @param sharedStyle the shared style
  */
-+ (void)setSharedStyle:(CSToastStyle *)sharedStyle;
-
-/**
- Gets the shared style from the singlton. By default, this is
- `CSToastStyle`'s default style.
- 
- @return the shared style
- */
-+ (CSToastStyle *)sharedStyle;
+@property (strong, nonatomic) CSToastStyle *sharedStyle;
 
 /**
  Enables or disables tap to dismiss on toast views. Default is `YES`.
  
  @param tapToDismissEnabled YES or NO
  */
-+ (void)setTapToDismissEnabled:(BOOL)tapToDismissEnabled;
-
-/**
- Returns `YES` if tap to dismiss is enabled, otherwise `NO`.
- Default is `YES`.
- 
- @return BOOL YES or NO
- */
-+ (BOOL)isTapToDismissEnabled;
+@property (assign, nonatomic, getter=isTapToDismissEnabled) BOOL tapToDismissEnabled;
 
 /**
  Enables or disables queueing behavior for toast views. When `YES`,
@@ -399,15 +417,7 @@ extern const NSString * CSToastPositionBottom;
  
  @param queueEnabled YES or NO
  */
-+ (void)setQueueEnabled:(BOOL)queueEnabled;
-
-/**
- Returns `YES` if the queue is enabled, otherwise `NO`.
- Default is `NO`.
- 
- @return BOOL
- */
-+ (BOOL)isQueueEnabled;
+@property (assign, nonatomic, getter=isQueueEnabled) BOOL queueEnabled;
 
 /**
  Sets the default duration. Used for the `makeToast:` and
@@ -416,14 +426,7 @@ extern const NSString * CSToastPositionBottom;
  
  @param duration The toast duration
  */
-+ (void)setDefaultDuration:(NSTimeInterval)duration;
-
-/**
- Returns the default duration. Default is 3.0.
- 
- @return duration The toast duration
-*/
-+ (NSTimeInterval)defaultDuration;
+@property (assign, nonatomic) NSTimeInterval defaultDuration;
 
 /**
  Sets the default position. Used for the `makeToast:` and
@@ -433,14 +436,6 @@ extern const NSString * CSToastPositionBottom;
  @param position The default center point. Can be one of the predefined
  CSToastPosition constants or a `CGPoint` wrapped in an `NSValue` object.
  */
-+ (void)setDefaultPosition:(id)position;
-
-/**
- Returns the default toast position. Default is `CSToastPositionBottom`.
- 
- @return position The default center point. Will be one of the predefined
- CSToastPosition constants or a `CGPoint` wrapped in an `NSValue` object.
- */
-+ (id)defaultPosition;
+@property (strong, nonatomic) id defaultPosition;
 
 @end
