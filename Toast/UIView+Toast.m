@@ -101,19 +101,40 @@ return _getter;\
     
     wrapperView.backgroundColor = style.backgroundColor;
     
+    // sanity
+    style.minWidthPercentage = MIN(style.minWidthPercentage, style.maxWidthPercentage);
+    style.minHeightPercentage = MIN(style.minHeightPercentage, style.maxHeightPercentage);
+    
+#define MIN_W (view.bounds.size.width * style.minWidthPercentage)
+#define MAX_W (view.bounds.size.width * style.maxWidthPercentage)
+#define MIN_H (view.bounds.size.height * style.minHeightPercentage)
+#define MAX_H (view.bounds.size.height * style.maxHeightPercentage)
+#define PADDING_X style.horizontalPadding
+#define PADDING_Y style.verticalPadding
+    
     if(image != nil) {
         imageView = [[UIImageView alloc] initWithImage:image];
         imageView.contentMode = UIViewContentModeScaleAspectFit;
-        imageView.frame = CGRectMake(style.horizontalPadding, style.verticalPadding, style.imageSize.width, style.imageSize.height);
+        
+        CGSize minSizeImage = CGSizeMake(
+                                         MIN_W - 2 * PADDING_X,
+                                         MIN_H - 2 * PADDING_Y
+                                         );
+        CGSize maxSizeImage = CGSizeMake(
+                                         MAX_W - 2 * PADDING_X,
+                                         MAX_H - 2 * PADDING_Y
+                                         );
+
+        imageView.frame = CGRectMake(style.horizontalPadding,
+                                     style.verticalPadding,
+                                     MIN(MAX(minSizeImage.width, style.imageSize.width), maxSizeImage.width),
+                                     MIN(MAX(minSizeImage.height, style.imageSize.height), maxSizeImage.height));
     }
     
     CGRect imageRect = CGRectZero;
     
     if(imageView != nil) {
-        imageRect.origin.x = style.horizontalPadding;
-        imageRect.origin.y = style.verticalPadding;
-        imageRect.size.width = imageView.bounds.size.width;
-        imageRect.size.height = imageView.bounds.size.height;
+        imageRect = imageView.frame;
     }
     
     if (title != nil) {
@@ -128,10 +149,23 @@ return _getter;\
         titleLabel.text = title;
         
         // size the title label according to the length of the text
-        CGSize maxSizeTitle = CGSizeMake((view.bounds.size.width * style.maxWidthPercentage) - imageRect.size.width, view.bounds.size.height * style.maxHeightPercentage);
+        CGSize minSizeTitle = CGSizeMake(
+                                         MIN_W - 2 * PADDING_X - imageRect.size.width,
+                                         MIN_H - 2 * PADDING_Y
+                                         );
+
+        CGSize maxSizeTitle = CGSizeMake(
+                                         MAX_W - 2 * PADDING_X - imageRect.size.width,
+                                         MAX_H - 2 * PADDING_Y
+                                         );
         CGSize expectedSizeTitle = [titleLabel sizeThatFits:maxSizeTitle];
         // UILabel can return a size larger than the max size when the number of lines is 1
-        expectedSizeTitle = CGSizeMake(MIN(maxSizeTitle.width, expectedSizeTitle.width), MIN(maxSizeTitle.height, expectedSizeTitle.height));
+        expectedSizeTitle = CGSizeMake(
+                                       MIN(MAX(minSizeTitle.width, expectedSizeTitle.width), maxSizeTitle.width),
+                                       MIN(MAX(minSizeTitle.height, expectedSizeTitle.height), maxSizeTitle.height)
+                                       );
+        expectedSizeTitle = CGSizeMake(MAX(0, expectedSizeTitle.width), MAX(0, expectedSizeTitle.height));
+
         titleLabel.frame = CGRectMake(0.0, 0.0, expectedSizeTitle.width, expectedSizeTitle.height);
     }
     
@@ -146,29 +180,44 @@ return _getter;\
         messageLabel.alpha = 1.0;
         messageLabel.text = message;
         
-        CGSize maxSizeMessage = CGSizeMake((view.bounds.size.width * style.maxWidthPercentage) - imageRect.size.width, view.bounds.size.height * style.maxHeightPercentage);
+        CGSize minSizeMessage = CGSizeMake(
+                                         MIN_W - 2 * PADDING_X - imageRect.size.width,
+                                         MIN_H - 2 * PADDING_Y - titleLabel.frame.size.height
+                                         );
+        
+        CGSize maxSizeMessage = CGSizeMake(
+                                         MAX_W - 2 * PADDING_X - imageRect.size.width,
+                                         MAX_H - 2 * PADDING_Y - titleLabel.frame.size.height
+                                         );
         CGSize expectedSizeMessage = [messageLabel sizeThatFits:maxSizeMessage];
         // UILabel can return a size larger than the max size when the number of lines is 1
-        expectedSizeMessage = CGSizeMake(MIN(maxSizeMessage.width, expectedSizeMessage.width), MIN(maxSizeMessage.height, expectedSizeMessage.height));
+        expectedSizeMessage = CGSizeMake(
+                                       MIN(MAX(minSizeMessage.width, expectedSizeMessage.width), maxSizeMessage.width),
+                                       MIN(MAX(minSizeMessage.height, expectedSizeMessage.height), maxSizeMessage.height)
+                                       );
+        expectedSizeMessage = CGSizeMake(MAX(0, expectedSizeMessage.width), MAX(0, expectedSizeMessage.height));
         messageLabel.frame = CGRectMake(0.0, 0.0, expectedSizeMessage.width, expectedSizeMessage.height);
     }
     
-    CGRect titleRect = CGRectZero;
+#undef MIN_W
+#undef MAX_W
+#undef MIN_H
+#undef MAX_H
+#undef PADDING_X
+#undef PADDING_Y
+    
+    CGRect titleRect = titleLabel.bounds;
     
     if(titleLabel != nil) {
         titleRect.origin.x = imageRect.origin.x + imageRect.size.width + style.horizontalPadding;
         titleRect.origin.y = style.verticalPadding;
-        titleRect.size.width = titleLabel.bounds.size.width;
-        titleRect.size.height = titleLabel.bounds.size.height;
     }
     
-    CGRect messageRect = CGRectZero;
+    CGRect messageRect = messageLabel.bounds;
     
     if(messageLabel != nil) {
         messageRect.origin.x = imageRect.origin.x + imageRect.size.width + style.horizontalPadding;
         messageRect.origin.y = titleRect.origin.y + titleRect.size.height + style.verticalPadding;
-        messageRect.size.width = messageLabel.bounds.size.width;
-        messageRect.size.height = messageLabel.bounds.size.height;
     }
     
     CGFloat longerWidth = MAX(titleRect.size.width, messageRect.size.width);

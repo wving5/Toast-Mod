@@ -263,6 +263,18 @@ typedef NS_ENUM(NSUInteger, CSToastStatus) {
 @property (strong, nonatomic) UIColor *messageColor;
 
 /**
+ A percentage value from 0.0 to 1.0, representing the minimum width of the toast
+ view relative to it's superview. Default is 0.8 (80% of the superview's width).
+ */
+@property (assign, nonatomic) CGFloat minWidthPercentage;
+
+/**
+ A percentage value from 0.0 to 1.0, representing the minimum height of the toast
+ view relative to it's superview. Default is 0.8 (80% of the superview's height).
+ */
+@property (assign, nonatomic) CGFloat minHeightPercentage;
+
+/**
  A percentage value from 0.0 to 1.0, representing the maximum width of the toast
  view relative to it's superview. Default is 0.8 (80% of the superview's width).
  */
