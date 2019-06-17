@@ -29,6 +29,17 @@
 static NSString * ZOToastSwitchCellId   = @"ZOToastSwitchCellId";
 static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
 
+@interface TestReleaseView : UIView
+@end
+@implementation TestReleaseView
+- (void)dealloc
+{
+    NSLog(@"%s", __func__);
+}
+@end
+
+
+
 @interface CSViewController ()
 
 @property (assign, nonatomic, getter=isShowingActivity) BOOL showingActivity;
@@ -50,6 +61,44 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
     return self;
 }
 
+- (NSArray *)titleArray {
+    return @[
+             @"Make toast",
+             @"Make toast on top for 3 seconds",
+             @"Make toast with a title",
+             @"Make toast with an image",
+             @"Make toast with a title, image, and completion block",
+             @"Make toast with a custom style",
+             @"Show a custom view as toast",
+             @"Show an image as toast at point\n(110, 110)",
+             @"Show toast activity",
+             @"Hide toast",
+             @"Hide all toasts",
+             @"Test released superview #49",
+             ];
+}
+
+- (UITableViewCell *)switchCell {
+    UITableViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier:ZOToastSwitchCellId];
+    if (cell) return cell;
+    cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:ZOToastSwitchCellId];
+    UISwitch *swtch = [[UISwitch alloc] init];
+    swtch.onTintColor = [UIColor colorWithRed:239.0 / 255.0 green:108.0 / 255.0 blue:0.0 / 255.0 alpha:1.0];
+    [swtch addTarget:self action:@selector(handleTapToSwitch:) forControlEvents:UIControlEventValueChanged];
+    cell.accessoryView = swtch;
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    cell.textLabel.font = [UIFont systemFontOfSize:16.0];
+    return cell;
+}
+
+- (UITableViewCell *)titleCell {
+    UITableViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier:ZOToastDemoCellId];
+    cell.textLabel.numberOfLines = 2;
+    cell.textLabel.font = [UIFont systemFontOfSize:16.0];
+    cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+    return cell;
+}
+
 #pragma mark - View Lifecycle
 
 - (void)viewDidLoad {
@@ -65,12 +114,8 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
 
 #pragma mark - Events
 
-- (void)handleTapToDismissToggled {
-    [CSToastManager setTapToDismissEnabled:![CSToastManager isTapToDismissEnabled]];
-}
-
-- (void)handleQueueToggled {
-    [CSToastManager setQueueEnabled:![CSToastManager isQueueEnabled]];
+- (void)handleTapToSwitch:(UISwitch *)swtch {
+    [self tableView:self.tableView didSelectRowAtIndexPath:[NSIndexPath indexPathForRow:swtch.tag inSection:0]];
 }
 
 #pragma mark - UITableViewDelegate & Datasource Methods
@@ -83,7 +128,7 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
     if (section == 0) {
         return 2;
     } else {
-        return 11;
+        return [self titleArray].count;
     }
 }
 
@@ -104,70 +149,36 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.section == 0 && indexPath.row == 0) {
-        UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:ZOToastSwitchCellId];
-        if (cell == nil) {
-            cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:ZOToastSwitchCellId];
-            self.tapToDismissSwitch = [[UISwitch alloc] init];
-            _tapToDismissSwitch.onTintColor = [UIColor colorWithRed:239.0 / 255.0 green:108.0 / 255.0 blue:0.0 / 255.0 alpha:1.0];
-            [_tapToDismissSwitch addTarget:self action:@selector(handleTapToDismissToggled) forControlEvents:UIControlEventValueChanged];
-            cell.accessoryView = _tapToDismissSwitch;
-            cell.selectionStyle = UITableViewCellSelectionStyleNone;
-            cell.textLabel.font = [UIFont systemFontOfSize:16.0];
+    if (indexPath.section == 0) {
+        UITableViewCell *cell = [self switchCell];
+        cell.accessoryView.tag = indexPath.row;
+        if (indexPath.row == 0) {
+            cell.textLabel.text = @"Tap to Dismiss";
+            [(id)cell.accessoryView setOn:[CSToastManager isTapToDismissEnabled]];
+        } else {
+            cell.textLabel.text = @"Queue Toast";
+            [(id)cell.accessoryView setOn:[CSToastManager isQueueEnabled]];
         }
-        cell.textLabel.text = @"Tap to Dismiss";
-        [_tapToDismissSwitch setOn:[CSToastManager isTapToDismissEnabled]];
-        return cell;
-    } else if (indexPath.section == 0 && indexPath.row == 1) {
-        UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:ZOToastSwitchCellId];
-        if (cell == nil) {
-            cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:ZOToastSwitchCellId];
-            self.queueSwitch = [[UISwitch alloc] init];
-            _queueSwitch.onTintColor = [UIColor colorWithRed:239.0 / 255.0 green:108.0 / 255.0 blue:0.0 / 255.0 alpha:1.0];
-            [_queueSwitch addTarget:self action:@selector(handleQueueToggled) forControlEvents:UIControlEventValueChanged];
-            cell.accessoryView = _queueSwitch;
-            cell.selectionStyle = UITableViewCellSelectionStyleNone;
-            cell.textLabel.font = [UIFont systemFontOfSize:16.0];
-        }
-        cell.textLabel.text = @"Queue Toast";
-        [_queueSwitch setOn:[CSToastManager isQueueEnabled]];
         return cell;
     } else {
-        UITableViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier:ZOToastDemoCellId forIndexPath:indexPath];
-        cell.textLabel.numberOfLines = 2;
-        cell.textLabel.font = [UIFont systemFontOfSize:16.0];
-        cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-        
-        if (indexPath.row == 0) {
-            cell.textLabel.text = @"Make toast";
-        } else if (indexPath.row == 1) {
-            cell.textLabel.text = @"Make toast on top for 3 seconds";
-        } else if (indexPath.row == 2) {
-            cell.textLabel.text = @"Make toast with a title";
-        } else if (indexPath.row == 3) {
-            cell.textLabel.text = @"Make toast with an image";
-        } else if (indexPath.row == 4) {
-            cell.textLabel.text = @"Make toast with a title, image, and completion block";
-        } else if (indexPath.row == 5) {
-            cell.textLabel.text = @"Make toast with a custom style";
-        } else if (indexPath.row == 6) {
-            cell.textLabel.text = @"Show a custom view as toast";
-        } else if (indexPath.row == 7) {
-            cell.textLabel.text = @"Show an image as toast at point\n(110, 110)";
-        } else if (indexPath.row == 8) {
+        UITableViewCell *cell = [self titleCell];
+        cell.textLabel.text = [self titleArray][indexPath.row];
+        if (indexPath.row == 8)
             cell.textLabel.text = (self.isShowingActivity) ? @"Hide toast activity" : @"Show toast activity";
-        } else if (indexPath.row == 9) {
-            cell.textLabel.text = @"Hide toast";
-        } else if (indexPath.row == 10) {
-            cell.textLabel.text = @"Hide all toasts";
-        }
         
         return cell;
     }
 }
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    if (indexPath.section == 0) return;
+    if (indexPath.section == 0) {
+        if (indexPath.row == 0) {
+            [CSToastManager setTapToDismissEnabled:![CSToastManager isTapToDismissEnabled]];
+        } else {
+            [CSToastManager setQueueEnabled:![CSToastManager isQueueEnabled]];
+        }
+        return;
+    }
     
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     
@@ -282,6 +293,19 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
         
         // Hide all toasts
         [self.navigationController.view hideAllToasts];
+        
+    } else {
+        
+        // test release superview
+        UIView *superView = [[TestReleaseView alloc] initWithFrame:CGRectMake(0, 0, 200, 200)];
+        superView.backgroundColor = [UIColor redColor];
+        
+        [self.navigationController.view addSubview: superView];
+        [superView makeToast:@"Test released superview"];
+        
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.16 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [superView removeFromSuperview];
+        });
         
     }
 }
