@@ -61,20 +61,41 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
     return self;
 }
 
+#define Make_toast                                @"Make toast"
+#define Make_toast_on_top_for_3_seconds           @"Make toast on top for 3 seconds"
+#define Make_toast_with_a_title                   @"Make toast with a title"
+#define Make_toast_with_an_image                  @"Make toast with an image"
+#define Make_toast_with_a_title_image_and_completion_block  @"Make toast with a title, image, and completion block"
+#define Make_toast_with_a_custom_layout            @"Make toast with a custom layout"
+#define Make_toast_with_a_custom_style            @"Make toast with a custom style"
+#define Show_a_custom_view_as_toast               @"Show a custom view as toast"
+#define Show_an_image_as_toast_at_point           @"Show an image as toast at point\n(110, 110)"
+#define Show_toast_activity                       @"Show toast activity"
+#define Hide_toast                                @"Hide toast"
+#define Hide_all_toasts                           @"Hide all toasts"
+#define Test_released_superview                   @"Test released superview #49"
+
+#define _idxOf(_title) [self indexOfTitle:_title]
+
+- (NSUInteger)indexOfTitle:(NSString *)title {
+    return [[self titleArray] indexOfObject:title];
+}
+
 - (NSArray *)titleArray {
     return @[
-             @"Make toast",
-             @"Make toast on top for 3 seconds",
-             @"Make toast with a title",
-             @"Make toast with an image",
-             @"Make toast with a title, image, and completion block",
-             @"Make toast with a custom style",
-             @"Show a custom view as toast",
-             @"Show an image as toast at point\n(110, 110)",
-             @"Show toast activity",
-             @"Hide toast",
-             @"Hide all toasts",
-             @"Test released superview #49",
+             Make_toast,
+             Make_toast_on_top_for_3_seconds,
+             Make_toast_with_a_title,
+             Make_toast_with_an_image,
+             Make_toast_with_a_title_image_and_completion_block,
+             Make_toast_with_a_custom_layout,
+             Make_toast_with_a_custom_style,
+             Show_a_custom_view_as_toast,
+             Show_an_image_as_toast_at_point,
+             Show_toast_activity,
+             Hide_toast,
+             Hide_all_toasts,
+             Test_released_superview,
              ];
 }
 
@@ -182,19 +203,19 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
     
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     
-    if (indexPath.row == 0) {
-        
+    if (indexPath.row == _idxOf(Make_toast)) {
+            
         // Make toast
         [self.navigationController.view makeToast:@"This is a piece of toast"];
         
-    } else if (indexPath.row == 1) {
+    } else if (indexPath.row == _idxOf(Make_toast_on_top_for_3_seconds)) {
         
         // Make toast with a duration and position
         [self.navigationController.view makeToast:@"This is a piece of toast on top for 3 seconds"
                                          duration:3.0
                                          position:CSToastPositionTop];
         
-    } else if (indexPath.row == 2) {
+    } else if (indexPath.row == _idxOf(Make_toast_with_a_title)) {
         
         // Make toast with a title
         [self.navigationController.view makeToast:@"This is a piece of toast with a title"
@@ -205,7 +226,28 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
                                             style:nil
                                        completion:nil];
         
-    } else if (indexPath.row == 3) {
+    } else if (indexPath.row == _idxOf(Make_toast_with_a_custom_layout)) {
+        
+        CSToastStyle *style = [[CSToastStyle alloc] initWithDefaultStyle];
+        style.titleAlignment = NSTextAlignmentCenter;
+        style.messageAlignment = NSTextAlignmentCenter;
+        style.horizontalPadding = 50.0;
+        style.verticalPadding = 50.0;
+        style.maxHeightPercentage = 0.5;
+        // this solves https://github.com/wving5/Toast-Mod/issues/4
+        style.minWidthPercentage =
+        style.maxWidthPercentage = 0.6;
+        
+        // Make toast with a title
+        [self.navigationController.view makeToast:@"This is a piece of toast with a custom layout"
+                                         duration:2.0
+                                         position:CSToastPositionTop
+                                            title:@"Toast Title"
+                                            image:nil
+                                            style:style
+                                       completion:nil];
+        
+    } else if (indexPath.row == _idxOf(Make_toast_with_an_image)) {
         
         // Make toast with an image
         [self.navigationController.view makeToast:@"This is a piece of toast with an image"
@@ -216,7 +258,7 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
                                             style:nil
                                        completion:nil];
         
-    } else if (indexPath.row == 4) {
+    } else if (indexPath.row == _idxOf(Make_toast_with_a_title_image_and_completion_block)) {
         
         // Make toast with an image, title, and completion block
         [self.navigationController.view makeToast:@"This is a piece of toast with a title, image, and completion block"
@@ -233,7 +275,7 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
                                            }
                                        }];
         
-    } else if (indexPath.row == 5) {
+    } else if (indexPath.row == _idxOf(Make_toast_with_a_custom_style)) {
         
         // Make toast with a custom style
         CSToastStyle *style = [[CSToastStyle alloc] initWithDefaultStyle];
@@ -250,7 +292,7 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
         // @NOTE: Uncommenting the line below will set the shared style for all toast methods:
         // [CSToastManager setSharedStyle:style];
         
-    } else if (indexPath.row == 6) {
+    } else if (indexPath.row == _idxOf(Show_a_custom_view_as_toast)) {
         
         // Show a custom view as toast
         UIView *customView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 80, 400)];
@@ -262,7 +304,7 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
                                          position:CSToastPositionCenter
                                        completion:nil];
         
-    } else if (indexPath.row == 7) {
+    } else if (indexPath.row == _idxOf(Show_an_image_as_toast_at_point)) {
         
         // Show an imageView as toast, on center at point (110,110)
         UIImageView *toastView = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"toast.png"]];
@@ -272,7 +314,7 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
                                          position:[NSValue valueWithCGPoint:CGPointMake(110, 110)] // wrap CGPoint in an NSValue object
                                        completion:nil];
         
-    } else if (indexPath.row == 8) {
+    } else if (indexPath.row == _idxOf(Show_toast_activity)) {
         
         // Make toast activity
         if (!self.isShowingActivity) {
@@ -284,17 +326,17 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
         
         [tableView reloadData];
         
-    } else if (indexPath.row == 9) {
+    } else if (indexPath.row == _idxOf(Hide_toast)) {
         
         // Hide toast
         [self.navigationController.view hideToast];
         
-    } else if (indexPath.row == 10) {
+    } else if (indexPath.row == _idxOf(Hide_all_toasts)) {
         
         // Hide all toasts
         [self.navigationController.view hideAllToasts];
         
-    } else {
+    } else if (indexPath.row == _idxOf(Test_released_superview)) {
         
         // test release superview
         UIView *superView = [[TestReleaseView alloc] initWithFrame:CGRectMake(0, 0, 200, 200)];
