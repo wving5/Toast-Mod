@@ -39,7 +39,6 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
 @end
 
 
-
 @interface CSViewController ()
 
 @property (assign, nonatomic, getter=isShowingActivity) BOOL showingActivity;
@@ -61,6 +60,7 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
     return self;
 }
 
+#define Random_global_style                       @"Random global style"
 #define Make_toast                                @"Make toast"
 #define Make_toast_on_top_for_3_seconds           @"Make toast on top for 3 seconds"
 #define Make_toast_with_a_title                   @"Make toast with a title"
@@ -83,6 +83,7 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
 
 - (NSArray *)titleArray {
     return @[
+             Random_global_style,
              Make_toast,
              Make_toast_on_top_for_3_seconds,
              Make_toast_with_a_title,
@@ -118,6 +119,41 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
     cell.textLabel.font = [UIFont systemFontOfSize:16.0];
     cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     return cell;
+}
+
+
+- (UIColor *)randomColor {
+    return [UIColor colorWithRed:(arc4random()%255) / 255.0
+                           green:(arc4random()%255) / 255.0
+                            blue:(arc4random()%255) / 255.0 alpha:1.0];
+}
+
+- (UIFont *)randomFont {
+    NSArray *fonts = @[
+                       @"AmericanTypewriter",
+                       @"AppleColorEmoji",
+                       @"Arial-BoldMT",
+                       @"AvenirNextCondensed-Heavy",
+                       @"Farah",
+                       @"Futura-Medium",
+                       @"Georgia",
+                       @"GillSans-Light",
+                       @"STHeitiSC-Medium",
+                       @"Helvetica",
+                       @"HiraKakuProN-W3",
+                       @"Menlo-Italic",
+                       @"Noteworthy-Bold",
+                       @"Papyrus",
+                       @"PingFangHK-Ultralight",
+                       @"SnellRoundhand-bold",
+                       @"Symbol",
+                       @"TimesNewRomanPSMT",
+                       @"Verdana",
+                       @"Zapfino",
+                       ];
+    
+    NSUInteger idx = arc4random() % fonts.count;
+    return [UIFont fontWithName:fonts[idx] size:10 + arc4random() % 10];
 }
 
 #pragma mark - View Lifecycle
@@ -184,7 +220,7 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
     } else {
         UITableViewCell *cell = [self titleCell];
         cell.textLabel.text = [self titleArray][indexPath.row];
-        if (indexPath.row == 8)
+        if (indexPath.row == _idxOf(Show_toast_activity))
             cell.textLabel.text = (self.isShowingActivity) ? @"Hide toast activity" : @"Show toast activity";
         
         return cell;
@@ -203,7 +239,23 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
     
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
     
-    if (indexPath.row == _idxOf(Make_toast)) {
+    if (indexPath.row == _idxOf(Random_global_style)) {
+        CSToastManager.sharedStyle.horizontalPadding = arc4random()%80 + 10.0;
+        CSToastManager.sharedStyle.verticalPadding = arc4random()%80 + 10.0;
+        CSToastManager.sharedStyle.maxWidthPercentage = (arc4random()%100) / 100.0 + 0.5;
+        CSToastManager.sharedStyle.maxHeightPercentage = (arc4random()%100) / 100.0 + 0.5;;
+        CSToastManager.sharedStyle.minWidthPercentage = (arc4random()%100) / 100.0;
+        CSToastManager.sharedStyle.minHeightPercentage = (arc4random()%100) / 100.0 - 0.5;
+        CSToastManager.sharedStyle.titleAlignment = arc4random()%3;
+        CSToastManager.sharedStyle.messageAlignment = arc4random()%3;
+        
+        CSToastManager.sharedStyle.messageFont = [self randomFont];
+        CSToastManager.sharedStyle.messageColor = [self randomColor];
+        CSToastManager.sharedStyle.backgroundColor = [self randomColor];
+        
+        [self printGlobalStyle];
+    }
+    else if (indexPath.row == _idxOf(Make_toast)) {
             
         // Make toast
         [self.navigationController.view makeToast:@"This is a piece of toast"];
@@ -350,6 +402,73 @@ static NSString * ZOToastDemoCellId     = @"ZOToastDemoCellId";
         });
         
     }
+}
+
+#pragma mark - Debug
+- (NSString *)textAlignmentDesc:(NSNumber *)alignment {
+    return @{
+             @(NSTextAlignmentLeft) : @"NSTextAlignmentLeft",
+             @(NSTextAlignmentCenter) : @"NSTextAlignmentCenter",
+             @(NSTextAlignmentRight) : @"NSTextAlignmentRight",
+             @(NSTextAlignmentJustified) : @"NSTextAlignmentJustified",
+             @(NSTextAlignmentNatural) : @"NSTextAlignmentNatural",
+             }[alignment];
+}
+
+- (void)printGlobalStyle {
+    CSToastStyle *style = CSToastManager.sharedStyle;
+   
+    NSLog(@"\n### Current Global Style: \n\
+          -------------------\n\
+          backgroundColor      : %@\n\
+          titleColor           : %@\n\
+          messageColor         : %@\n\
+          titleFont            : %@\n\
+          messageFont          : %@\n\
+          maxWidthPercentage   : %@\n\
+          maxHeightPercentage  : %@\n\
+          minWidthPercentage   : %@\n\
+          minHeightPercentage  : %@\n\
+          horizontalPadding    : %@\n\
+          verticalPadding      : %@\n\
+          cornerRadius         : %@\n\
+          titleAlignment       : %@\n\
+          messageAlignment     : %@\n\
+          titleNumberOfLines   : %@\n\
+          messageNumberOfLines : %@\n\
+          displayShadow        : %@\n\
+          shadowOpacity        : %@\n\
+          shadowRadius         : %@\n\
+          shadowOffset         : %@\n\
+          fadeDuration         : %@\n\
+          imageSize            : %@\n\
+          activitySize         : %@\n\
+          -------------------\n\
+          \n.",
+          style.backgroundColor?:@"",
+          style.titleColor?:@"",
+          style.messageColor?:@"",
+          style.titleFont?:@"",
+          style.messageFont?:@"",
+          @(style.maxWidthPercentage) ,
+          @(style.maxHeightPercentage) ,
+          @(style.minWidthPercentage) ,
+          @(style.minHeightPercentage) ,
+          @(style.horizontalPadding) ,
+          @(style.verticalPadding) ,
+          @(style.cornerRadius) ,
+          [self textAlignmentDesc: @(style.titleAlignment)] ,
+          [self textAlignmentDesc: @(style.messageAlignment)] ,
+          @(style.titleNumberOfLines) ,
+          @(style.messageNumberOfLines) ,
+          @(style.displayShadow) ,
+          @(style.shadowOpacity) ,
+          @(style.shadowRadius) ,
+          @(style.shadowOffset) ,
+          @(style.fadeDuration) ,
+          NSStringFromCGSize(style.imageSize) ,
+          NSStringFromCGSize(style.activitySize)
+          );
 }
 
 @end
