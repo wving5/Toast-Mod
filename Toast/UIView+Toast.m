@@ -109,26 +109,38 @@ return _getter;\
 #define CALC_MAX_W (view.bounds.size.width * style.maxWidthPercentage)
 #define CALC_MIN_H (view.bounds.size.height * style.minHeightPercentage)
 #define CALC_MAX_H (view.bounds.size.height * style.maxHeightPercentage)
-#define PADDING_X style.horizontalPadding
-#define PADDING_Y style.verticalPadding
+#define PADDING_X  (style.horizontalPadding)
+#define PADDING_Y  (style.verticalPadding)
+#define _Left   origin.x
+#define _Top    origin.y
+#define _Width  size.width
+#define _Height size.height
     
+    /* Layout Priority:
+        1. from Left to Right
+        2. from Top  to Bottom
+     
+     which means: image -> titleLabel -> messageLabel
+     */
+    
+    // 1. calc image bounds if needed
     if(image != nil) {
         imageView = [[UIImageView alloc] initWithImage:image];
         imageView.contentMode = UIViewContentModeScaleAspectFit;
         
-        CGSize minSizeImage = CGSizeMake(
-                                         CALC_MIN_W - 2 * PADDING_X,
-                                         CALC_MIN_H - 2 * PADDING_Y
-                                         );
+        // apply image maxSize
         CGSize maxSizeImage = CGSizeMake(
                                          CALC_MAX_W - 2 * PADDING_X,
                                          CALC_MAX_H - 2 * PADDING_Y
                                          );
+        maxSizeImage = CGSizeMake(MAX(0, maxSizeImage.width), MAX(0, maxSizeImage.height));
 
         imageView.frame = CGRectMake(PADDING_X,
                                      PADDING_Y,
-                                     MIN(MAX(minSizeImage.width, style.imageSize.width), maxSizeImage.width),
-                                     MIN(MAX(minSizeImage.height, style.imageSize.height), maxSizeImage.height));
+                                     MIN(style.imageSize.width, maxSizeImage.width),
+                                     MIN(style.imageSize.height, maxSizeImage.height));
+        
+        // validate minSize at last cuz may have tileLabel / messageLabel
     }
     
     CGRect imageRect = CGRectZero;
@@ -137,6 +149,7 @@ return _getter;\
         imageRect = imageView.frame;
     }
     
+    // 2. calc title bounds if needed
     if (title != nil) {
         titleLabel = [[UILabel alloc] init];
         titleLabel.numberOfLines = style.titleNumberOfLines;
@@ -150,16 +163,19 @@ return _getter;\
         
         // size the title label according to the length of the text
         CGSize minSizeTitle = CGSizeMake(
-                                         CALC_MIN_W - 2 * PADDING_X - imageRect.size.width,
+                                         CALC_MIN_W - 2 * PADDING_X - imageRect._Width - imageRect._Left,
                                          CALC_MIN_H - 2 * PADDING_Y
                                          );
 
         CGSize maxSizeTitle = CGSizeMake(
-                                         CALC_MAX_W - 2 * PADDING_X - imageRect.size.width,
+                                         CALC_MAX_W - 2 * PADDING_X - imageRect._Width - imageRect._Left,
                                          CALC_MAX_H - 2 * PADDING_Y
                                          );
-        CGSize expectedSizeTitle = [titleLabel sizeThatFits:maxSizeTitle];
+        
         // UILabel can return a size larger than the max size when the number of lines is 1
+        CGSize expectedSizeTitle = [titleLabel sizeThatFits:maxSizeTitle];
+        
+        // resize according to min/max size settings
         expectedSizeTitle = CGSizeMake(
                                        MIN(MAX(minSizeTitle.width, expectedSizeTitle.width), maxSizeTitle.width),
                                        MIN(MAX(minSizeTitle.height, expectedSizeTitle.height), maxSizeTitle.height)
@@ -169,6 +185,7 @@ return _getter;\
         titleLabel.frame = CGRectMake(0.0, 0.0, expectedSizeTitle.width, expectedSizeTitle.height);
     }
     
+    // 3. calc message bounds if needed
     if (message != nil) {
         messageLabel = [[UILabel alloc] init];
         messageLabel.numberOfLines = style.messageNumberOfLines;
@@ -181,45 +198,61 @@ return _getter;\
         messageLabel.text = message;
         
         CGSize minSizeMessage = CGSizeMake(
-                                         CALC_MIN_W - 2 * PADDING_X - imageRect.size.width,
-                                         CALC_MIN_H - 2 * PADDING_Y - titleLabel.frame.size.height
+                                         CALC_MIN_W - 2 * PADDING_X - imageRect._Width - imageRect._Left,
+                                         CALC_MIN_H - 2 * PADDING_Y - titleLabel.frame._Height - titleLabel.frame._Top
                                          );
         
         CGSize maxSizeMessage = CGSizeMake(
-                                         CALC_MAX_W - 2 * PADDING_X - imageRect.size.width,
-                                         CALC_MAX_H - 2 * PADDING_Y - titleLabel.frame.size.height
+                                         CALC_MAX_W - 2 * PADDING_X - imageRect._Width - imageRect._Left,
+                                         CALC_MAX_H - 2 * PADDING_Y - titleLabel.frame._Height - titleLabel.frame._Top
                                          );
-        CGSize expectedSizeMessage = [messageLabel sizeThatFits:maxSizeMessage];
         // UILabel can return a size larger than the max size when the number of lines is 1
+        CGSize expectedSizeMessage = [messageLabel sizeThatFits:maxSizeMessage];
+        
+        // resize according to min/max size settings
         expectedSizeMessage = CGSizeMake(
                                        MIN(MAX(minSizeMessage.width, expectedSizeMessage.width), maxSizeMessage.width),
                                        MIN(MAX(minSizeMessage.height, expectedSizeMessage.height), maxSizeMessage.height)
                                        );
         expectedSizeMessage = CGSizeMake(MAX(0, expectedSizeMessage.width), MAX(0, expectedSizeMessage.height));
+        
         messageLabel.frame = CGRectMake(0.0, 0.0, expectedSizeMessage.width, expectedSizeMessage.height);
     }
     
+    
+    // 4. calc frames to layout
     CGRect titleRect = titleLabel.bounds;
     
     if(titleLabel != nil) {
-        titleRect.origin.x = imageRect.origin.x + imageRect.size.width + PADDING_X;
-        titleRect.origin.y = PADDING_Y;
+        titleRect._Left = (imageRect._Left + imageRect._Width) + PADDING_X;
+        titleRect._Top = PADDING_Y;
     }
     
     CGRect messageRect = messageLabel.bounds;
-    
+
     if(messageLabel != nil) {
-        messageRect.origin.x = imageRect.origin.x + imageRect.size.width + PADDING_X;
-        messageRect.origin.y = titleRect.origin.y + titleRect.size.height + PADDING_Y;
+        messageRect._Left = (imageRect._Left + imageRect._Width) + PADDING_X;
+        messageRect._Top = (titleRect._Top + titleRect._Height) + PADDING_Y;
     }
     
-    CGFloat longerWidth = MAX(titleRect.size.width, messageRect.size.width);
-    CGFloat longerX = MAX(titleRect.origin.x, messageRect.origin.x);
+    CGFloat rightContentWidth = MAX(titleRect._Width, messageRect._Width);
+    CGFloat rightContentX = MAX(titleRect._Left, messageRect._Left);
     
     // Wrapper width uses the longerWidth or the image width, whatever is larger. Same logic applies to the wrapper height.
-    CGFloat wrapperWidth = MAX((imageRect.size.width + (PADDING_X * 2.0)), (longerX + longerWidth + PADDING_X));
-    CGFloat wrapperHeight = MAX((messageRect.origin.y + messageRect.size.height + PADDING_Y), (imageRect.size.height + (PADDING_Y * 2.0)));
+    CGFloat wrapperWidth = MAX(
+                               (imageRect._Left + imageRect._Width) + PADDING_X,
+                               (rightContentX + rightContentWidth) + PADDING_X
+                               );
+    CGFloat wrapperHeight = MAX(
+                                (imageRect._Top + imageRect._Height) + PADDING_Y,
+                                (messageRect._Top + messageRect._Height) + PADDING_Y
+                                );
     
+    
+#undef _Height
+#undef _Width
+#undef _Left
+#undef _Top
 #undef CALC_MIN_W
 #undef CALC_MAX_W
 #undef CALC_MIN_H
