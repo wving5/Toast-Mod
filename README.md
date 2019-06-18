@@ -18,6 +18,19 @@ Fork Change Log
 2. remove toast runtime setter/getter, create a new `CSToast` class instead ( also support toast using customed view
 3. **speed up** toast in queue if multiple toast is pending, enable `queueEnabled` by default
 
+##### v4.2
+
+1. support minWidthPercentage / minHeightPercentage for more control on view alignment
+2. fix min/maxXXXPercentage  behaviour
+
+##### v4.3
+
+1. fix layout issue with minXXXPercentage & padding
+2. review the whole layout logic
+
+##### v4.3.1
+
+1. new demo case: random global style (LOL
 
 Screenshots
 ---------
