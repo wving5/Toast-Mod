@@ -105,10 +105,10 @@ return _getter;\
     style.minWidthPercentage = MIN(style.minWidthPercentage, style.maxWidthPercentage);
     style.minHeightPercentage = MIN(style.minHeightPercentage, style.maxHeightPercentage);
     
-#define MIN_W (view.bounds.size.width * style.minWidthPercentage)
-#define MAX_W (view.bounds.size.width * style.maxWidthPercentage)
-#define MIN_H (view.bounds.size.height * style.minHeightPercentage)
-#define MAX_H (view.bounds.size.height * style.maxHeightPercentage)
+#define CALC_MIN_W (view.bounds.size.width * style.minWidthPercentage)
+#define CALC_MAX_W (view.bounds.size.width * style.maxWidthPercentage)
+#define CALC_MIN_H (view.bounds.size.height * style.minHeightPercentage)
+#define CALC_MAX_H (view.bounds.size.height * style.maxHeightPercentage)
 #define PADDING_X style.horizontalPadding
 #define PADDING_Y style.verticalPadding
     
@@ -117,16 +117,16 @@ return _getter;\
         imageView.contentMode = UIViewContentModeScaleAspectFit;
         
         CGSize minSizeImage = CGSizeMake(
-                                         MIN_W - 2 * PADDING_X,
-                                         MIN_H - 2 * PADDING_Y
+                                         CALC_MIN_W - 2 * PADDING_X,
+                                         CALC_MIN_H - 2 * PADDING_Y
                                          );
         CGSize maxSizeImage = CGSizeMake(
-                                         MAX_W - 2 * PADDING_X,
-                                         MAX_H - 2 * PADDING_Y
+                                         CALC_MAX_W - 2 * PADDING_X,
+                                         CALC_MAX_H - 2 * PADDING_Y
                                          );
 
-        imageView.frame = CGRectMake(style.horizontalPadding,
-                                     style.verticalPadding,
+        imageView.frame = CGRectMake(PADDING_X,
+                                     PADDING_Y,
                                      MIN(MAX(minSizeImage.width, style.imageSize.width), maxSizeImage.width),
                                      MIN(MAX(minSizeImage.height, style.imageSize.height), maxSizeImage.height));
     }
@@ -150,13 +150,13 @@ return _getter;\
         
         // size the title label according to the length of the text
         CGSize minSizeTitle = CGSizeMake(
-                                         MIN_W - 2 * PADDING_X - imageRect.size.width,
-                                         MIN_H - 2 * PADDING_Y
+                                         CALC_MIN_W - 2 * PADDING_X - imageRect.size.width,
+                                         CALC_MIN_H - 2 * PADDING_Y
                                          );
 
         CGSize maxSizeTitle = CGSizeMake(
-                                         MAX_W - 2 * PADDING_X - imageRect.size.width,
-                                         MAX_H - 2 * PADDING_Y
+                                         CALC_MAX_W - 2 * PADDING_X - imageRect.size.width,
+                                         CALC_MAX_H - 2 * PADDING_Y
                                          );
         CGSize expectedSizeTitle = [titleLabel sizeThatFits:maxSizeTitle];
         // UILabel can return a size larger than the max size when the number of lines is 1
@@ -181,13 +181,13 @@ return _getter;\
         messageLabel.text = message;
         
         CGSize minSizeMessage = CGSizeMake(
-                                         MIN_W - 2 * PADDING_X - imageRect.size.width,
-                                         MIN_H - 2 * PADDING_Y - titleLabel.frame.size.height
+                                         CALC_MIN_W - 2 * PADDING_X - imageRect.size.width,
+                                         CALC_MIN_H - 2 * PADDING_Y - titleLabel.frame.size.height
                                          );
         
         CGSize maxSizeMessage = CGSizeMake(
-                                         MAX_W - 2 * PADDING_X - imageRect.size.width,
-                                         MAX_H - 2 * PADDING_Y - titleLabel.frame.size.height
+                                         CALC_MAX_W - 2 * PADDING_X - imageRect.size.width,
+                                         CALC_MAX_H - 2 * PADDING_Y - titleLabel.frame.size.height
                                          );
         CGSize expectedSizeMessage = [messageLabel sizeThatFits:maxSizeMessage];
         // UILabel can return a size larger than the max size when the number of lines is 1
@@ -199,33 +199,33 @@ return _getter;\
         messageLabel.frame = CGRectMake(0.0, 0.0, expectedSizeMessage.width, expectedSizeMessage.height);
     }
     
-#undef MIN_W
-#undef MAX_W
-#undef MIN_H
-#undef MAX_H
-#undef PADDING_X
-#undef PADDING_Y
-    
     CGRect titleRect = titleLabel.bounds;
     
     if(titleLabel != nil) {
-        titleRect.origin.x = imageRect.origin.x + imageRect.size.width + style.horizontalPadding;
-        titleRect.origin.y = style.verticalPadding;
+        titleRect.origin.x = imageRect.origin.x + imageRect.size.width + PADDING_X;
+        titleRect.origin.y = PADDING_Y;
     }
     
     CGRect messageRect = messageLabel.bounds;
     
     if(messageLabel != nil) {
-        messageRect.origin.x = imageRect.origin.x + imageRect.size.width + style.horizontalPadding;
-        messageRect.origin.y = titleRect.origin.y + titleRect.size.height + style.verticalPadding;
+        messageRect.origin.x = imageRect.origin.x + imageRect.size.width + PADDING_X;
+        messageRect.origin.y = titleRect.origin.y + titleRect.size.height + PADDING_Y;
     }
     
     CGFloat longerWidth = MAX(titleRect.size.width, messageRect.size.width);
     CGFloat longerX = MAX(titleRect.origin.x, messageRect.origin.x);
     
     // Wrapper width uses the longerWidth or the image width, whatever is larger. Same logic applies to the wrapper height.
-    CGFloat wrapperWidth = MAX((imageRect.size.width + (style.horizontalPadding * 2.0)), (longerX + longerWidth + style.horizontalPadding));
-    CGFloat wrapperHeight = MAX((messageRect.origin.y + messageRect.size.height + style.verticalPadding), (imageRect.size.height + (style.verticalPadding * 2.0)));
+    CGFloat wrapperWidth = MAX((imageRect.size.width + (PADDING_X * 2.0)), (longerX + longerWidth + PADDING_X));
+    CGFloat wrapperHeight = MAX((messageRect.origin.y + messageRect.size.height + PADDING_Y), (imageRect.size.height + (PADDING_Y * 2.0)));
+    
+#undef CALC_MIN_W
+#undef CALC_MAX_W
+#undef CALC_MIN_H
+#undef CALC_MAX_H
+#undef PADDING_X
+#undef PADDING_Y
     
     wrapperView.frame = CGRectMake(0.0, 0.0, wrapperWidth, wrapperHeight);
     
@@ -655,6 +655,8 @@ Associate_Lazy_Getter(NSMutableArray, cs_toastQueue, CSToastQueueKey)
         self.messageColor = [UIColor whiteColor];
         self.maxWidthPercentage = 0.8;
         self.maxHeightPercentage = 0.8;
+        self.minWidthPercentage = 0.5;
+        
         self.horizontalPadding = 10.0;
         self.verticalPadding = 10.0;
         self.cornerRadius = 10.0;
@@ -681,6 +683,16 @@ Associate_Lazy_Getter(NSMutableArray, cs_toastQueue, CSToastQueueKey)
 
 - (void)setMaxHeightPercentage:(CGFloat)maxHeightPercentage {
     _maxHeightPercentage = MAX(MIN(maxHeightPercentage, 1.0), 0.0);
+}
+
+- (void)setMinWidthPercentage:(CGFloat)minWidthPercentage
+{
+    _minWidthPercentage = MAX(MIN(minWidthPercentage, 1.0), 0.0);
+}
+
+- (void)setMinHeightPercentage:(CGFloat)minHeightPercentage
+{
+    _minHeightPercentage = MAX(MIN(minHeightPercentage, 1.0), 0.0);
 }
 
 - (instancetype)init NS_UNAVAILABLE {
