@@ -27,8 +27,12 @@
 #import <QuartzCore/QuartzCore.h>
 #import <objc/runtime.h>
 
-#ifdef DEBUG
+#define ENABLE_TOAST_LOG 0
+#if ENABLE_TOAST_LOG == 1
+#warning Logging using Private API
 #define CSDebugLog(fmt, ...) NSLog(@"[%@] " fmt , [[NSThread currentThread] valueForKeyPath:@"private.seqNum"], ##__VA_ARGS__)
+#else
+#define CSDebugLog(fmt, ...)
 #endif
 
 #define Associate_Lazy_Getter(_type, _getter, _key) \
